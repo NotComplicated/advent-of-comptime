@@ -1,5 +1,16 @@
-pub const result = solve(@embedFile("../inputs/day07.txt")) catch |err| @errorName(err);
+const std = @import("std");
+const utils = @import("../utils.zig");
 
-fn solve(input: []const u8) ![]const u8 {
-    return input;
+pub const sample =
+    \\
+;
+
+pub fn part1(input: []const u8) !i64 {
+    _ = input;
+    return error.NotImplemented;
+}
+
+pub fn part2(input: []const u8) !i64 {
+    _ = input;
+    return error.NotImplemented;
 }
