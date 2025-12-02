@@ -15,7 +15,6 @@ pub const sample =
 ;
 
 pub fn part1(input: []const u8) !i64 {
-    @setEvalBranchQuota(1_000_000);
     var dial = 50;
     var zeroes = 0;
     var lines = utils.iterLines(input);

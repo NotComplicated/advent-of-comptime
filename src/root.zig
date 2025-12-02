@@ -24,6 +24,7 @@ pub const Results = struct {
 };
 
 pub const results = results: {
+    @setEvalBranchQuota(1_000_000_000);
     var rs: [days.len]Results = undefined;
     for (days, &rs, 1..) |day, *r, i| {
         const input_path = std.fmt.comptimePrint("inputs/day{d:02}.txt", .{i});
