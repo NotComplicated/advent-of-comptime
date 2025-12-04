@@ -24,35 +24,40 @@ fn inner(input: []const u8, strategy: enum { once, exhaust }) !i64 {
         const end_ds = countDigits(end);
         if (end_ds < 2) continue;
 
-        for (2..end_ds + 1) |divs| {
-            if (start_ds < divs) break;
-
-            const start_first_part = if (start_ds % divs == 0) sfp: {
-                var sfp = start / std.math.pow(u64, 10, start_ds - start_ds / divs);
-                const new_start = expand(sfp, divs);
-                if (new_start < start) sfp += 1;
-                break :sfp sfp;
-            } else sfp: {
-                const new_ds = start_ds + divs - (start_ds % divs);
-                break :sfp std.math.pow(u64, 10, new_ds / divs - 1);
-            };
-
-            const end_first_part = if (end_ds % divs == 0) efp: {
-                var efp = end / std.math.pow(u64, 10, end_ds - end_ds / divs);
-                const new_end = expand(efp, divs);
-                if (new_end > end) efp -= 1;
-                break :efp efp;
-            } else efp: {
-                const new_ds = end_ds - (end_ds % divs);
-                break :efp std.math.pow(u64, 10, new_ds / divs) - 1;
-            };
-
-            if (start_first_part <= end_first_part) {
-                for (start_first_part..end_first_part + 1) |first_part| {
-                    sum += expand(first_part, divs);
+        var prev_divs: utils.Set(usize) = .{};
+        div: for (2..end_ds + 1) |div| {
+            {
+                var prev_divs_iter = prev_divs.iter();
+                while (prev_divs_iter.next()) |prev_div| {
+                    if (div % prev_div == 0) continue :div;
                 }
             }
 
+            var first_part = if (start_ds % div == 0) fp: {
+                var fp = start / std.math.pow(u64, 10, start_ds - start_ds / div);
+                const new_start, _ = expand(fp, div);
+                if (new_start < start) fp += 1;
+                break :fp fp;
+            } else sfp: {
+                const new_ds = start_ds + div - (start_ds % div);
+                break :sfp std.math.pow(u64, 10, new_ds / div - 1);
+            };
+
+            fp: while (true) : (first_part += 1) {
+                const expanded, const exp_ds = expand(first_part, div);
+                if (expanded > end) break;
+                var prev_divs_iter = prev_divs.iter();
+                while (prev_divs_iter.next()) |prev_div| {
+                    if (exp_ds % prev_div == 0) {
+                        const fpe = expanded / std.math.pow(u64, 10, exp_ds - exp_ds / prev_div);
+                        const new_expanded, _ = expand(fpe, prev_div);
+                        if (expanded == new_expanded) continue :fp;
+                    }
+                }
+                sum += expanded;
+            }
+
+            prev_divs.insert(div);
             if (strategy == .once) break;
         }
     }
@@ -66,11 +71,11 @@ fn countDigits(num: u64) usize {
     return count;
 }
 
-fn expand(first_part: u64, divs: usize) u64 {
+fn expand(first_part: u64, divs: usize) struct { u64, usize } {
     const first_part_ds = countDigits(first_part);
     var expanded = 0;
     for (0..divs) |i| {
         expanded += first_part * std.math.pow(u64, 10, i * first_part_ds);
     }
-    return expanded;
+    return .{ expanded, first_part_ds * divs };
 }

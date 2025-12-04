@@ -11,7 +11,7 @@ pub fn main() !void {
         out = out ++ std.fmt.comptimePrint("\tPart 2 (input): {!}\n\n", .{results.part2_input});
     }
     const stdout = std.fs.File.stdout();
-    var buf: [1024]u8 = undefined;
+    var buf: [out.len]u8 = undefined;
     var writer = stdout.writer(&buf);
     try writer.interface.writeAll(out);
     try writer.interface.flush();
