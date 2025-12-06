@@ -16,42 +16,50 @@ pub const sample =
 ;
 
 pub fn part1(input: []const u8) !i64 {
-    const columns = std.mem.indexOfScalar(u8, input, '\n').?;
-    const rows = input.len / (columns + 1);
-    var rolls: [rows][columns]bool = undefined;
-    var input_ptr = input.ptr;
-    for (&rolls) |*row| for (row) |*roll| roll: while (true) {
-        const b = input_ptr[0];
-        input_ptr += 1;
-        roll.* = switch (b) {
-            '.' => false,
-            '@' => true,
-            '\n' => continue :roll,
-            else => return error.Unexpected,
-        };
-        break :roll;
-    };
-    var sum = 0;
-    for (0..rows) |r| for (0..columns) |c| if (rolls[r][c]) {
-        var count = 0;
-        if (r > 0) {
-            if (c > 0 and rolls[r - 1][c - 1]) count += 1;
-            if (rolls[r - 1][c]) count += 1;
-            if (c < columns - 1 and rolls[r - 1][c + 1]) count += 1;
-        }
-        if (c > 0 and rolls[r][c - 1]) count += 1;
-        if (c < columns - 1 and rolls[r][c + 1]) count += 1;
-        if (r < rows - 1) {
-            if (c > 0 and rolls[r + 1][c - 1]) count += 1;
-            if (rolls[r + 1][c]) count += 1;
-            if (c < columns - 1 and rolls[r + 1][c + 1]) count += 1;
-        }
-        if (count < 4) sum += 1;
-    };
-    return sum;
+    const cols = std.mem.indexOfScalar(u8, input, '\n').? + 1;
+    var rolls: [input.len]u8 = input[0..].*;
+    return remove(rolls[0..], cols);
 }
 
 pub fn part2(input: []const u8) !i64 {
-    _ = input;
-    return error.NotImplemented;
+    const cols = std.mem.indexOfScalar(u8, input, '\n').? + 1;
+    var rolls: [input.len]u8 = input[0..].*;
+    var sum = 0;
+    while (true) {
+        const removed = remove(rolls[0..], cols);
+        if (removed == 0) return sum;
+        sum += removed;
+        for (&rolls) |*roll| if (roll.* & 1 == 1) {
+            roll.* = '.';
+        };
+    }
+}
+
+pub fn remove(rolls: []u8, cols: usize) usize {
+    var sum = 0;
+    for (rolls, 0..) |*c, i| {
+        if (c.* & '@' == 0) continue;
+        const row = i / cols;
+        const col = i % cols;
+        var count = 0;
+        if (row > 0) {
+            const x = (row - 1) * cols;
+            if (col > 0 and rolls[x + col - 1] & '@' == '@') count += 1;
+            if (rolls[x + col] & '@' == '@') count += 1;
+            if (col < cols - 1 and rolls[x + col + 1] & '@' == '@') count += 1;
+        }
+        if (col > 0 and rolls[row * cols + col - 1] & '@' == '@') count += 1;
+        if (col < cols - 1 and rolls[row * cols + col + 1] & '@' == '@') count += 1;
+        if (row < rolls.len / cols - 1) {
+            const x = (row + 1) * cols;
+            if (col > 0 and rolls[x + col - 1] & '@' == '@') count += 1;
+            if (rolls[x + col] & '@' == '@') count += 1;
+            if (col < cols - 1 and rolls[x + col + 1] & '@' == '@') count += 1;
+        }
+        if (count < 4) {
+            c.* |= 1;
+            sum += 1;
+        }
+    }
+    return sum;
 }
