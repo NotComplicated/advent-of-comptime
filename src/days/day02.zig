@@ -24,11 +24,10 @@ fn inner(input: []const u8, strategy: enum { once, exhaust }) !i64 {
         const end_ds = countDigits(end);
         if (end_ds < 2) continue;
 
-        var prev_divs: utils.Set(usize) = .{};
+        var prev_divs: []const usize = &.{};
         div: for (2..end_ds + 1) |div| {
             {
-                var prev_divs_iter = prev_divs.iter();
-                while (prev_divs_iter.next()) |prev_div| {
+                for (prev_divs) |prev_div| {
                     if (div % prev_div == 0) continue :div;
                 }
             }
@@ -46,8 +45,7 @@ fn inner(input: []const u8, strategy: enum { once, exhaust }) !i64 {
             fp: while (true) : (first_part += 1) {
                 const expanded, const exp_ds = expand(first_part, div);
                 if (expanded > end) break;
-                var prev_divs_iter = prev_divs.iter();
-                while (prev_divs_iter.next()) |prev_div| {
+                for (prev_divs) |prev_div| {
                     if (exp_ds % prev_div == 0) {
                         const fpe = expanded / std.math.pow(u64, 10, exp_ds - exp_ds / prev_div);
                         const new_expanded, _ = expand(fpe, prev_div);
@@ -57,7 +55,9 @@ fn inner(input: []const u8, strategy: enum { once, exhaust }) !i64 {
                 sum += expanded;
             }
 
-            prev_divs.insert(div);
+            var insert = true;
+            for (prev_divs) |prev_div| insert &= prev_div == div;
+            if (insert) prev_divs = prev_divs ++ .{div};
             if (strategy == .once) break;
         }
     }
